@@ -424,6 +424,7 @@ function finishUnlock(tok,dev,repo){
 
 /* ---------------- reader ---------------- */
 var currentBuild=null,currentBlobUrl=null;
+var lastLedgerText=null,syncBusy=false,autoSyncTimer=null,pollTimer=null,POLL_MS=15000;
 
 function rinfo(m){$('rinfo').textContent=m;}
 function veil(m){var v=$('veil');if(!m){v.style.display='none';return;}v.textContent=m;v.style.display='block';
@@ -448,7 +449,7 @@ function fetchBook(){
   var base='/repos/'+a.owner+'/'+a.repo+'/contents/';
   Promise.all([
     gh(base+'artifact/the-book.html',{raw:true}),
-    gh(base+'comments/ledger.json',{raw:true}).then(function(t){return JSON.parse(t);}).catch(function(){return null;})
+    gh(base+'comments/ledger.json',{raw:true}).then(function(t){lastLedgerText=t;return JSON.parse(t);}).catch(function(){return null;})
   ]).then(function(res){
     var doc=res[0],ledger=res[1];
     /* splice the live ledger over the build-time seed, same discipline as the
@@ -512,11 +513,11 @@ function b64utf8(s){
   for(var i=0;i<bytes.length;i+=8192)bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+8192));
   return btoa(bin);
 }
-$('rsync').addEventListener('click',function(){
-  var a=loadAuth();if(!a)return;
+function doSync(auto){
+  var a=loadAuth();if(!a||syncBusy)return;
   var st=readOverlay();
-  if(!st.overlay.length&&!st.deleted.length){veil('margins already settled');return;}
-  var b=$('rsync');b.disabled=true;
+  if(!st.overlay.length&&!st.deleted.length){if(!auto)veil('margins already settled');return;}
+  syncBusy=true;var b=$('rsync');b.disabled=true;
   var receipt={doc:'Thinking Through Distinction',build:currentBuild||'live',
                exported:new Date().toISOString(),count:st.overlay.length,
                comments:st.overlay.map(toExportEntry),deleted:st.deleted.slice()};
@@ -528,13 +529,57 @@ $('rsync').addEventListener('click',function(){
     branch:'main'
   }}).then(function(){
     try{localStorage.setItem(EXPORTED_KEY,JSON.stringify({overlay:st.overlay,deleted:st.deleted}));}catch(e){}
-    veil('receipt committed; the medium settles itself');
-    b.disabled=false;refreshSyncButton();
+    if(!auto)veil('receipt committed; the medium settles itself');
+    syncBusy=false;b.disabled=false;refreshSyncButton();
   }).catch(function(e){
-    veil('sync failed: '+e.message);
-    b.disabled=false;
+    if(!auto)veil('sync failed: '+e.message);
+    syncBusy=false;b.disabled=false;
   });
+}
+$('rsync').addEventListener('click',function(){doSync(false);});
+
+/* ---------------- the watcher (browser tier) ----------------
+   Each projection observes itself and the remote as cheaply as a browser can, and
+   reconciles without a manual gesture (Refresh/Sync stay as fallback). WRITE side: the
+   embedded book posts 'ttd-dirty' on any margin change; we debounce ~2.5s and throw the
+   receipt to GitHub. READ side: while visible, poll the ledger (~15s); on drift, push the
+   fresh ledger into the frame as a live re-seed -- margins re-render in place, no reload,
+   the reader keeps position. The book HTML build changes rarely and stays on Refresh. Full
+   real-time (native file-watch -> SSE / BEP push) is the deferred next tier: see the cogdoc
+   the-watcher-waiting. The re-seed carries only public ledger entries (private dropped),
+   same discipline as fetchBook and the assembler. */
+function frameWin(){var f=$('frame');return f&&f.contentWindow;}
+function pushSeed(ledgerText){
+  var w=frameWin();if(!w)return;
+  var pub;try{var L=JSON.parse(ledgerText);pub=(L.comments||[]).filter(function(c){return !c.private;});}catch(e){return;}
+  try{w.postMessage({type:'ttd-reseed',seed:pub},'*');}catch(e){}
+}
+window.addEventListener('message',function(e){
+  if(e.source!==frameWin())return;
+  var d=e.data;if(!d||typeof d!=='object')return;
+  if(d.type==='ttd-dirty'){
+    clearTimeout(autoSyncTimer);
+    if((d.pending|0)>0)autoSyncTimer=setTimeout(function(){doSync(true);},2500);
+  }else if(d.type==='ttd-ready'){
+    if(lastLedgerText)pushSeed(lastLedgerText);
+  }
 });
+function pollLedger(){
+  var a=loadAuth();
+  if(!a||document.hidden||!$('reader').classList.contains('on'))return;
+  gh('/repos/'+a.owner+'/'+a.repo+'/contents/comments/ledger.json',{raw:true}).then(function(t){
+    if(t===lastLedgerText)return;                 /* no drift -> silent; the watcher waits */
+    var first=(lastLedgerText===null);
+    lastLedgerText=t;
+    if(!first){                                    /* drift -> re-seed the frame in place */
+      pushSeed(t);
+      var when=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+      rinfo('review build '+(currentBuild||'?')+' · ledger live · updated '+when);
+    }
+  }).catch(function(){});
+}
+document.addEventListener('visibilitychange',function(){if(!document.hidden)pollLedger();});
+pollTimer=setInterval(pollLedger,POLL_MS);
 
 /* ---------------- pwa ---------------- */
 if('serviceWorker' in navigator){
