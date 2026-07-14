@@ -13,6 +13,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Thinking Through Distinction</title>
+<script src="eigen-form.js"></script>
 <style>
   :root{
     --ink:#16130F; --ink2:#1D1913; --paper:#E8E0D2; --faded:#9A8F7D; --dim:#6E6353;
@@ -25,6 +26,12 @@
   html,body{margin:0;padding:0;background:var(--ink);height:100%}
   body{color:var(--paper);font-family:var(--serif);-webkit-font-smoothing:antialiased;
        display:flex;flex-direction:column;min-height:100dvh}
+
+  /* ------- eigenform field ------- */
+  /* The mark's wavefront, composited into the background. Centered on the
+     equation: F(x) = x is the emitter; the orbit is its field. */
+  #field{position:fixed;left:0;top:0;pointer-events:none;z-index:0;opacity:.34}
+  #brand,#unlock,footer{position:relative;z-index:1}
 
   /* ------- brand / countdown ------- */
   #brand{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -90,6 +97,8 @@
 </style>
 </head>
 <body>
+
+<canvas id="field" width="960" height="960" aria-hidden="true"></canvas>
 
 <main id="brand">
   <div class="eyebrow">Myrgic</div>
@@ -177,6 +186,30 @@ var $=function(id){return document.getElementById(id);};
   tick();
 })();
 
+/* ---------------- eigenform field ----------------
+   The frame's vector animation in the background: the (2,3) wavefront
+   orbits the fixed point, depositing a trail that dissipates unless the
+   path is re-traced. The equation is the emitter — the orbit's centroid
+   is pinned to F(x) = x, and the field radiates around it. */
+(function(){
+  var el=$('field');
+  if(!el||typeof createTrefoilMark!=='function'){if(el)el.style.display='none';return;}
+  function place(){
+    var eq=document.querySelector('#brand .eq');
+    if(!eq||$('brand').classList.contains('off'))return;
+    var r=eq.getBoundingClientRect();
+    var cx=r.left+r.width/2, cy=r.top+r.height/2;
+    var S=Math.max(720,Math.min(window.innerWidth,window.innerHeight)*1.35);
+    el.style.width=S+'px';el.style.height=S+'px';
+    el.style.left=(cx-S/2)+'px';el.style.top=(cy-S/2)+'px';
+  }
+  place();
+  window.addEventListener('resize',place);
+  window.addEventListener('load',place);
+  createTrefoilMark(el,{gradient:'madder',period:7000,decay:5200,precession:-52000,
+                        parallax:.55,scale:238,ballRadius:6,strokeWidth:2.5});
+})();
+
 /* ---------------- auth ---------------- */
 function loadAuth(){try{var a=JSON.parse(localStorage.getItem(AUTH_KEY));return (a&&a.token&&a.owner&&a.repo)?a:null;}catch(e){return null;}}
 function saveAuth(a){localStorage.setItem(AUTH_KEY,JSON.stringify(a));}
@@ -203,6 +236,7 @@ function show(view){
   $('brand').classList.toggle('off',view!=='brand');
   $('unlock').classList.toggle('on',view==='unlock');
   $('reader').classList.toggle('on',view==='reader');
+  var f=$('field');if(f)f.style.display=(view==='brand')?'':'none';
 }
 $('entrance').addEventListener('click',function(){
   if(loadAuth()){openReader();}else{show('unlock');setTimeout(function(){$('utok').focus();},50);}
