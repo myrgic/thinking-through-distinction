@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://api.github.com; frame-src blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="theme-color" content="#16130F">
+<meta name="description" content="Thinking Through Distinction. A book. Coming.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Distinction">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Thinking Through Distinction</title>
+<style>
+  :root{
+    --ink:#16130F; --ink2:#1D1913; --paper:#E8E0D2; --faded:#9A8F7D; --dim:#6E6353;
+    --madder:#C4483E; --madder-soft:#D4685F; --hair:#2E2820; --chip:#221D16;
+    --serif:'Iowan Old Style',Palatino,'Palatino Linotype','Book Antiqua',Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --mono:ui-monospace,'SF Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--ink);height:100%}
+  body{color:var(--paper);font-family:var(--serif);-webkit-font-smoothing:antialiased;
+       display:flex;flex-direction:column;min-height:100dvh}
+
+  /* ------- brand / countdown ------- */
+  #brand{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+         text-align:center;padding:40px 22px calc(40px + env(safe-area-inset-bottom))}
+  .eyebrow{font-family:var(--sans);font-size:11px;letter-spacing:.28em;color:var(--faded);
+           text-transform:uppercase;font-weight:500}
+  h1{font-size:clamp(38px,8.5vw,60px);font-weight:400;margin:16px 0 8px;text-wrap:balance;line-height:1.12}
+  h1 .accent-t{font-style:italic}
+  .eq{margin-top:26px;font-size:clamp(20px,4.5vw,27px);font-style:italic;color:var(--paper)}
+  .eq .fn{color:var(--madder)}
+  #count{margin-top:52px;display:flex;gap:clamp(14px,4vw,30px);justify-content:center}
+  #count .cell{min-width:64px}
+  #count .num{font-size:clamp(30px,7vw,44px);font-variant-numeric:tabular-nums;line-height:1}
+  #count .lab{margin-top:8px;font-family:var(--sans);font-size:10px;letter-spacing:.22em;
+              text-transform:uppercase;color:var(--dim)}
+  #soon{margin-top:52px;font-family:var(--sans);font-size:12px;letter-spacing:.3em;
+        text-transform:uppercase;color:var(--faded);display:none}
+  #entrance{margin-top:70px;background:none;border:1px solid transparent;border-radius:50%;
+            width:44px;height:44px;color:var(--dim);font-size:20px;line-height:1;cursor:pointer;
+            font-family:var(--serif);transition:color .3s,border-color .3s}
+  #entrance:hover,#entrance:focus-visible{color:var(--madder-soft);border-color:var(--hair);outline:none}
+
+  /* ------- unlock panel ------- */
+  #unlock{display:none;flex:1;align-items:center;justify-content:center;padding:22px}
+  #unlock.on{display:flex}
+  #brand.off{display:none}
+  .panel{width:min(420px,100%);border:1px solid var(--hair);border-radius:6px;background:var(--ink2);
+         padding:28px 26px 24px}
+  .panel h2{font-weight:400;font-size:22px;margin:0 0 4px}
+  .panel .sub{color:var(--faded);font-size:14px;font-style:italic;margin:0 0 22px}
+  .panel label{display:block;font-family:var(--sans);font-size:10px;letter-spacing:.2em;
+               text-transform:uppercase;color:var(--dim);margin:16px 0 6px}
+  .panel input{width:100%;background:var(--chip);border:1px solid var(--hair);border-radius:4px;
+               color:var(--paper);font-family:var(--mono);font-size:14px;padding:10px 12px}
+  .panel input:focus{outline:none;border-color:var(--dim)}
+  .row{display:flex;gap:10px;margin-top:24px;align-items:center}
+  .btn{font-family:var(--sans);font-size:13px;letter-spacing:.04em;border-radius:4px;cursor:pointer;
+       padding:10px 18px;border:1px solid var(--hair);background:var(--chip);color:var(--paper)}
+  .btn.primary{background:var(--madder);border-color:var(--madder);color:#fff}
+  .btn:disabled{opacity:.5;cursor:default}
+  #uerr{color:var(--madder-soft);font-size:13px;margin-top:14px;min-height:1.2em}
+  #upick{margin-top:14px;display:none}
+  #upick .btn{display:block;width:100%;margin-top:8px;text-align:left;font-family:var(--mono)}
+
+  /* ------- reader ------- */
+  #reader{display:none;flex-direction:column;position:fixed;inset:0;background:var(--ink);z-index:10}
+  #reader.on{display:flex}
+  #rbar{display:flex;align-items:center;gap:10px;padding:8px 12px;
+        padding-top:calc(8px + env(safe-area-inset-top));
+        background:var(--ink2);border-bottom:1px solid var(--hair);font-family:var(--sans)}
+  #rbar .info{flex:1;text-align:center;font-family:var(--mono);font-size:11px;color:var(--dim);
+              white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #rbar .bbtn{background:none;border:1px solid var(--hair);border-radius:4px;color:var(--faded);
+              font-family:var(--sans);font-size:12px;padding:6px 10px;cursor:pointer;white-space:nowrap}
+  #rbar .bbtn:hover{color:var(--paper)}
+  #rbar .bbtn.hot{color:var(--madder-soft);border-color:var(--madder-soft)}
+  #frame{flex:1;width:100%;border:0;background:var(--ink)}
+  #veil{position:absolute;inset:0;top:auto;bottom:0;padding:10px;text-align:center;display:none;
+        font-family:var(--mono);font-size:12px;color:var(--faded);background:rgba(22,19,15,.92)}
+
+  footer{padding:14px;text-align:center;font-family:var(--sans);font-size:10px;
+         letter-spacing:.22em;text-transform:uppercase;color:var(--dim)}
+</style>
+</head>
+<body>
+
+<main id="brand">
+  <div class="eyebrow">Myrgic</div>
+  <h1>Thinking Through <span class="accent-t">Distinction</span></h1>
+  <div class="eq"><span class="fn">F</span>(x) = x</div>
+  <div id="count" hidden>
+    <div class="cell"><div class="num" id="cd">0</div><div class="lab">days</div></div>
+    <div class="cell"><div class="num" id="ch">0</div><div class="lab">hours</div></div>
+    <div class="cell"><div class="num" id="cm">0</div><div class="lab">minutes</div></div>
+    <div class="cell"><div class="num" id="cs">0</div><div class="lab">seconds</div></div>
+  </div>
+  <div id="soon">Soon</div>
+  <button id="entrance" aria-label="entrance" title="entrance">&#8728;</button>
+</main>
+
+<section id="unlock" aria-label="entrance">
+  <div class="panel">
+    <h2>Entrance</h2>
+    <p class="sub">A key opens the manuscript. Without one, there is only the door.</p>
+    <label for="utok">Key</label>
+    <input id="utok" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_&hellip;">
+    <label for="udev">This device</label>
+    <input id="udev" type="text" autocomplete="off" spellcheck="false" maxlength="24" placeholder="phone">
+    <div id="upick"></div>
+    <div class="row">
+      <button class="btn primary" id="ugo">Open</button>
+      <button class="btn" id="uback">Back</button>
+    </div>
+    <div id="uerr"></div>
+  </div>
+</section>
+
+<div id="reader">
+  <div id="rbar">
+    <button class="bbtn" id="rclose" title="close the manuscript">Close</button>
+    <div class="info" id="rinfo">&hellip;</div>
+    <button class="bbtn" id="rsync" title="commit local margin notes">Sync margins</button>
+    <button class="bbtn" id="rfresh" title="refetch the draft">Refresh</button>
+    <button class="bbtn" id="rlock" title="forget the key on this device">Lock</button>
+  </div>
+  <iframe id="frame" title="manuscript"></iframe>
+  <div id="veil"></div>
+</div>
+
+<footer>myrgic.com</footer>
+
+<script>
+'use strict';
+/* ============================================================================
+   Thinking Through Distinction, public shell.
+   To the world: a title and a countdown. With a key: a thin client that reads
+   the manuscript and its live margin ledger through the GitHub API and writes
+   margin receipts back as commits. No draft bytes live in this repository or
+   on this host, plaintext or otherwise; content transits authenticated reads
+   only. The key is a fine-grained personal access token scoped to the one
+   repository it opens; which repository that is gets discovered FROM the key
+   at unlock time, so this file names none.
+   ========================================================================== */
+
+/* Release moment, UTC. null renders the quiet "Soon" state. Operator sets. */
+var RELEASE_UTC = '2026-07-26T16:00:00Z'; /* noon Eastern, July 26, 2026 -- operator-set 2026-07-13 */
+
+var AUTH_KEY='ttd-client-auth';
+var OVERLAY_KEY='ttd-comments-v2';
+var EXPORTED_KEY='ttd-comments-v2:exported';
+var API='https://api.github.com';
+var $=function(id){return document.getElementById(id);};
+
+/* ---------------- countdown ---------------- */
+(function(){
+  if(!RELEASE_UTC){$('soon').style.display='block';return;}
+  var t=new Date(RELEASE_UTC).getTime();
+  if(isNaN(t)){$('soon').style.display='block';return;}
+  $('count').hidden=false;
+  function tick(){
+    var d=t-Date.now();
+    if(d<=0){$('count').hidden=true;var s=$('soon');s.textContent='Now';s.style.display='block';return;}
+    var sec=Math.floor(d/1000);
+    $('cd').textContent=Math.floor(sec/86400);
+    $('ch').textContent=Math.floor(sec%86400/3600);
+    $('cm').textContent=Math.floor(sec%3600/60);
+    $('cs').textContent=sec%60;
+    setTimeout(tick,1000-(Date.now()%1000));
+  }
+  tick();
+})();
+
+/* ---------------- auth ---------------- */
+function loadAuth(){try{var a=JSON.parse(localStorage.getItem(AUTH_KEY));return (a&&a.token&&a.owner&&a.repo)?a:null;}catch(e){return null;}}
+function saveAuth(a){localStorage.setItem(AUTH_KEY,JSON.stringify(a));}
+function dropAuth(){localStorage.removeItem(AUTH_KEY);}
+
+function ghHeaders(token,raw){
+  return {'Authorization':'Bearer '+token,
+          'Accept':raw?'application/vnd.github.raw+json':'application/vnd.github+json',
+          'X-GitHub-Api-Version':'2022-11-28'};
+}
+function gh(path,opts){
+  opts=opts||{};var a=loadAuth();if(!a)return Promise.reject(new Error('no key'));
+  return fetch(API+path,{method:opts.method||'GET',headers:ghHeaders(a.token,opts.raw),
+                         body:opts.body?JSON.stringify(opts.body):undefined})
+    .then(function(r){
+      if(r.status===401||r.status===403){throw new Error('the key was refused ('+r.status+')');}
+      if(!r.ok){throw new Error('api '+r.status+' on '+path);}
+      return opts.raw?r.text():r.json();
+    });
+}
+
+/* ---------------- views ---------------- */
+function show(view){
+  $('brand').classList.toggle('off',view!=='brand');
+  $('unlock').classList.toggle('on',view==='unlock');
+  $('reader').classList.toggle('on',view==='reader');
+}
+$('entrance').addEventListener('click',function(){
+  if(loadAuth()){openReader();}else{show('unlock');setTimeout(function(){$('utok').focus();},50);}
+});
+$('uback').addEventListener('click',function(){show('brand');uerr('');});
+function uerr(m){$('uerr').textContent=m||'';}
+
+/* unlock: the key tells us which repository it opens */
+$('ugo').addEventListener('click',doUnlock);
+$('utok').addEventListener('keydown',function(e){if(e.key==='Enter')doUnlock();});
+function doUnlock(){
+  var tok=$('utok').value.trim();
+  var dev=($('udev').value.trim()||'client').toLowerCase().replace(/[^a-z0-9-]/g,'-');
+  if(!tok){uerr('a key is required');return;}
+  $('ugo').disabled=true;uerr('');
+  fetch(API+'/user/repos?per_page=100&sort=pushed',{headers:ghHeaders(tok)})
+    .then(function(r){if(!r.ok)throw new Error('the key was refused ('+r.status+')');return r.json();})
+    .then(function(repos){
+      var writable=(repos||[]).filter(function(r){return r.permissions&&r.permissions.push;});
+      if(!writable.length)throw new Error('this key opens nothing it can write to');
+      if(writable.length===1){
+        finishUnlock(tok,dev,writable[0]);
+      }else{
+        var pick=$('upick');pick.style.display='block';pick.innerHTML='';
+        writable.slice(0,8).forEach(function(r){
+          var b=document.createElement('button');b.className='btn';b.type='button';
+          b.textContent=r.full_name;
+          b.addEventListener('click',function(){finishUnlock(tok,dev,r);});
+          pick.appendChild(b);
+        });
+        uerr('this key opens more than one door; choose');
+        $('ugo').disabled=false;
+      }
+    })
+    .catch(function(e){uerr(e.message);$('ugo').disabled=false;});
+}
+function finishUnlock(tok,dev,repo){
+  saveAuth({token:tok,owner:repo.owner.login,repo:repo.name,device:dev});
+  $('utok').value='';$('upick').style.display='none';$('ugo').disabled=false;
+  openReader();
+}
+
+/* ---------------- reader ---------------- */
+var currentBuild=null,currentBlobUrl=null;
+
+function rinfo(m){$('rinfo').textContent=m;}
+function veil(m){var v=$('veil');if(!m){v.style.display='none';return;}v.textContent=m;v.style.display='block';
+  clearTimeout(veil._t);veil._t=setTimeout(function(){v.style.display='none';},4000);}
+
+function openReader(){
+  show('reader');
+  fetchBook();
+}
+$('rclose').addEventListener('click',function(){show('brand');});
+$('rfresh').addEventListener('click',fetchBook);
+$('rlock').addEventListener('click',function(){
+  dropAuth();show('brand');
+  if(currentBlobUrl){URL.revokeObjectURL(currentBlobUrl);currentBlobUrl=null;}
+  $('frame').src='about:blank';
+  veil('');
+});
+
+function fetchBook(){
+  var a=loadAuth();if(!a){show('unlock');return;}
+  rinfo('fetching the draft over the wire, nothing cached…');
+  var base='/repos/'+a.owner+'/'+a.repo+'/contents/';
+  Promise.all([
+    gh(base+'artifact/the-book.html',{raw:true}),
+    gh(base+'comments/ledger.json',{raw:true}).then(function(t){return JSON.parse(t);}).catch(function(){return null;})
+  ]).then(function(res){
+    var doc=res[0],ledger=res[1];
+    /* splice the live ledger over the build-time seed, same discipline as the
+       assembler: drop private entries, escape "</" inside the JSON */
+    if(ledger&&Array.isArray(ledger.comments)){
+      var pub=ledger.comments.filter(function(c){return !c.private;});
+      var seed=JSON.stringify(pub).replace(/<\//g,'<\\/');
+      doc=doc.replace(/(<script type="application\/json" id="ttd-seed">)[\s\S]*?(<\/script>)/,
+        function(m,open,close){return open+seed+close;});
+    }
+    var m=doc.match(/build <span class="v">([0-9a-f]{7})<\/span>/);
+    currentBuild=m?m[1]:null;
+    var old=currentBlobUrl;
+    currentBlobUrl=URL.createObjectURL(new Blob([doc],{type:'text/html'}));
+    $('frame').src=currentBlobUrl;
+    if(old)setTimeout(function(){URL.revokeObjectURL(old);},5000);
+    var when=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    rinfo('review build '+(currentBuild||'?')+' · ledger '+(ledger?'live':'embedded')+' · fetched '+when);
+    refreshSyncButton();
+  }).catch(function(e){
+    rinfo('could not fetch: '+e.message);
+    if(/refused/.test(e.message))veil('the key was refused; Lock and enter a fresh one');
+  });
+}
+
+/* ---------------- margin sync ---------------- */
+/* The manuscript's own margin tooling runs inside the frame. Blob documents
+   share this origin, so its localStorage overlay is readable right here; a
+   sync maps the overlay (local notes, edits, tombstones only, never the
+   seed) into a receipt and commits it to comments/inbox/, where the repo's
+   ingest workflow settles it into the ledger with no desk awake. */
+function readOverlay(){
+  try{var v=JSON.parse(localStorage.getItem(OVERLAY_KEY))||{};
+      return {overlay:Array.isArray(v.overlay)?v.overlay:[],deleted:Array.isArray(v.deleted)?v.deleted:[]};}
+  catch(e){return {overlay:[],deleted:[]};}
+}
+function pendingCount(){var s=readOverlay();return s.overlay.length+s.deleted.length;}
+function refreshSyncButton(){
+  var n=pendingCount(),b=$('rsync');
+  b.textContent=n?('Sync margins ('+n+')'):'Sync margins';
+  b.classList.toggle('hot',n>0);
+}
+setInterval(refreshSyncButton,4000);
+
+function toExportEntry(c){
+  var o={id:c.id,chapter:c.chapter||'',quote:c.quote||'',context_before:c.prefix||'',
+         context_after:c.suffix||'',note:c.comment||c.note||'',ts:c.ts,
+         status:c.status==='resolved'?'acked':(c.status||'open')};
+  if(c.ack)o.ack=c.ack;
+  if(c.author)o.author=c.author;
+  if(c.kind)o.kind=c.kind;
+  if(c.section)o.section=c.section;
+  if(c.replacement!=null)o.replacement=c.replacement;
+  if(c.original!=null)o.original=c.original;
+  if(c.accepted)o.accepted=true;
+  if(c.replies&&c.replies.length)o.replies=c.replies.slice();
+  return o;
+}
+function b64utf8(s){
+  var bytes=new TextEncoder().encode(s),bin='';
+  for(var i=0;i<bytes.length;i+=8192)bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+8192));
+  return btoa(bin);
+}
+$('rsync').addEventListener('click',function(){
+  var a=loadAuth();if(!a)return;
+  var st=readOverlay();
+  if(!st.overlay.length&&!st.deleted.length){veil('margins already settled');return;}
+  var b=$('rsync');b.disabled=true;
+  var receipt={doc:'Thinking Through Distinction',build:currentBuild||'live',
+               exported:new Date().toISOString(),count:st.overlay.length,
+               comments:st.overlay.map(toExportEntry),deleted:st.deleted.slice()};
+  var stamp=new Date().toISOString().replace(/[-:]/g,'');
+  var path='comments/inbox/'+stamp+'-'+(a.device||'client')+'.json';
+  gh('/repos/'+a.owner+'/'+a.repo+'/contents/'+path,{method:'PUT',body:{
+    message:'margins: receipt from '+(a.device||'client')+' ('+st.overlay.length+' entries, '+st.deleted.length+' tombstones)',
+    content:b64utf8(JSON.stringify(receipt,null,2)),
+    branch:'main'
+  }}).then(function(){
+    try{localStorage.setItem(EXPORTED_KEY,JSON.stringify({overlay:st.overlay,deleted:st.deleted}));}catch(e){}
+    veil('receipt committed; the medium settles itself');
+    b.disabled=false;refreshSyncButton();
+  }).catch(function(e){
+    veil('sync failed: '+e.message);
+    b.disabled=false;
+  });
+});
+
+/* ---------------- pwa ---------------- */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
+}
+
+/* resume straight into the manuscript when a key is already present */
+if(loadAuth()&&matchMedia('(display-mode: standalone)').matches){openReader();}
+</script>
+</body>
+</html>
