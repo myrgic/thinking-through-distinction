@@ -3,7 +3,7 @@
    touches api.github.com and never caches manuscript bytes; the draft
    transits authenticated reads and lives in memory, nowhere else. */
 'use strict';
-var VERSION = 'ttd-shell-v3';
+var VERSION = 'ttd-shell-v4';
 var SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {
