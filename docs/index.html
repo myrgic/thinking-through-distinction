@@ -42,13 +42,13 @@
   h1 .accent-t{font-style:italic}
   .eq{margin-top:26px;font-size:clamp(20px,4.5vw,27px);font-style:italic;color:var(--paper)}
   .eq .fn{color:var(--madder)}
-  #count{margin-top:52px;display:flex;gap:clamp(14px,4vw,30px);justify-content:center}
+  #count:not([hidden]){margin-top:52px;display:flex;gap:clamp(14px,4vw,30px);justify-content:center}
   #count .cell{min-width:64px}
   #count .num{font-size:clamp(30px,7vw,44px);font-variant-numeric:tabular-nums;line-height:1}
   #count .lab{margin-top:8px;font-family:var(--sans);font-size:10px;letter-spacing:.22em;
               text-transform:uppercase;color:var(--dim)}
-  #soon{margin-top:52px;font-family:var(--sans);font-size:12px;letter-spacing:.3em;
-        text-transform:uppercase;color:var(--faded);display:none}
+  #soon{margin-top:52px;font-family:var(--serif);font-size:15px;font-style:italic;line-height:1.6;
+        max-width:320px;margin-left:auto;margin-right:auto;color:var(--faded);display:none}
   #entrance{margin-top:70px;background:none;border:1px solid transparent;border-radius:50%;
             width:44px;height:44px;color:var(--dim);font-size:20px;line-height:1;cursor:pointer;
             font-family:var(--serif);transition:color .3s,border-color .3s}
@@ -110,7 +110,7 @@
     <div class="cell"><div class="num" id="cm">0</div><div class="lab">minutes</div></div>
     <div class="cell"><div class="num" id="cs">0</div><div class="lab">seconds</div></div>
   </div>
-  <div id="soon">Soon</div>
+  <div id="soon">This book is being written. Editions will publish here.</div>
   <button id="entrance" aria-label="entrance" title="entrance">&#8728;</button>
 </main>
 
@@ -158,8 +158,8 @@
    at unlock time, so this file names none.
    ========================================================================== */
 
-/* Release moment, UTC. null renders the quiet "Soon" state. Operator sets. */
-var RELEASE_UTC = '2026-07-26T16:00:00Z'; /* noon Eastern, July 26, 2026 -- operator-set 2026-07-13 */
+/* Release moment, UTC. null renders the quiet holding state. Operator sets. */
+var RELEASE_UTC = null; /* prior date (2026-07-26) rescinded; ratification never happened. quieted 2026-08-02 */
 
 var AUTH_KEY='ttd-client-auth';
 var OVERLAY_KEY='ttd-comments-v2';
