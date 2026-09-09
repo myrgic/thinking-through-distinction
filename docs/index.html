@@ -33,7 +33,7 @@
   #field{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:.6}
   #brand,#unlock,footer{position:relative;z-index:1}
 
-  /* ------- brand / countdown ------- */
+  /* ------- brand ------- */
   #brand{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
          text-align:center;padding:40px 22px calc(40px + env(safe-area-inset-bottom))}
   .eyebrow{font-family:var(--sans);font-size:11px;letter-spacing:.28em;color:var(--faded);
@@ -42,13 +42,6 @@
   h1 .accent-t{font-style:italic}
   .eq{margin-top:26px;font-size:clamp(20px,4.5vw,27px);font-style:italic;color:var(--paper)}
   .eq .fn{color:var(--madder)}
-  #count:not([hidden]){margin-top:52px;display:flex;gap:clamp(14px,4vw,30px);justify-content:center}
-  #count .cell{min-width:64px}
-  #count .num{font-size:clamp(30px,7vw,44px);font-variant-numeric:tabular-nums;line-height:1}
-  #count .lab{margin-top:8px;font-family:var(--sans);font-size:10px;letter-spacing:.22em;
-              text-transform:uppercase;color:var(--dim)}
-  #soon{margin-top:52px;font-family:var(--serif);font-size:15px;font-style:italic;line-height:1.6;
-        max-width:320px;margin-left:auto;margin-right:auto;color:var(--faded);display:none}
   #entrance{margin-top:70px;background:none;border:1px solid transparent;border-radius:50%;
             width:44px;height:44px;color:var(--dim);font-size:20px;line-height:1;cursor:pointer;
             font-family:var(--serif);transition:color .3s,border-color .3s}
@@ -104,13 +97,6 @@
   <div class="eyebrow">Myrgic</div>
   <h1>Thinking Through <span class="accent-t">Distinction</span></h1>
   <div class="eq"><span class="fn">F</span>(x) = x</div>
-  <div id="count" hidden>
-    <div class="cell"><div class="num" id="cd">0</div><div class="lab">days</div></div>
-    <div class="cell"><div class="num" id="ch">0</div><div class="lab">hours</div></div>
-    <div class="cell"><div class="num" id="cm">0</div><div class="lab">minutes</div></div>
-    <div class="cell"><div class="num" id="cs">0</div><div class="lab">seconds</div></div>
-  </div>
-  <div id="soon">This book is being written. Nothing here is late, only unfinished. Editions will publish here when they are ready.</div>
   <button id="entrance" aria-label="entrance" title="entrance">&#8728;</button>
 </main>
 
@@ -149,7 +135,7 @@
 'use strict';
 /* ============================================================================
    Thinking Through Distinction, public shell.
-   To the world: a title and a countdown. With a key: a thin client that reads
+   To the world: a title, quiet. With a key: a thin client that reads
    the manuscript and its live margin ledger through the GitHub API and writes
    margin receipts back as commits. No draft bytes live in this repository or
    on this host, plaintext or otherwise; content transits authenticated reads
@@ -158,33 +144,11 @@
    at unlock time, so this file names none.
    ========================================================================== */
 
-/* Release moment, UTC. null renders the quiet holding state. Operator sets. */
-var RELEASE_UTC = null; /* prior date (2026-07-26) rescinded; ratification never happened. quieted 2026-08-02 */
-
 var AUTH_KEY='ttd-client-auth';
 var OVERLAY_KEY='ttd-comments-v2';
 var EXPORTED_KEY='ttd-comments-v2:exported';
 var API='https://api.github.com';
 var $=function(id){return document.getElementById(id);};
-
-/* ---------------- countdown ---------------- */
-(function(){
-  if(!RELEASE_UTC){$('soon').style.display='block';return;}
-  var t=new Date(RELEASE_UTC).getTime();
-  if(isNaN(t)){$('soon').style.display='block';return;}
-  $('count').hidden=false;
-  function tick(){
-    var d=t-Date.now();
-    if(d<=0){$('count').hidden=true;var s=$('soon');s.textContent='Now';s.style.display='block';return;}
-    var sec=Math.floor(d/1000);
-    $('cd').textContent=Math.floor(sec/86400);
-    $('ch').textContent=Math.floor(sec%86400/3600);
-    $('cm').textContent=Math.floor(sec%3600/60);
-    $('cs').textContent=sec%60;
-    setTimeout(tick,1000-(Date.now()%1000));
-  }
-  tick();
-})();
 
 /* ---------------- the field ----------------
    The Frame, adapted for a background: the complex Ginzburg-Landau equation
