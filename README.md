@@ -2,6 +2,6 @@
 
 One subject, measured recursively.
 
-This repository hosts the web editions of the book. First edition arrives July 26, 2026.
+This repository hosts the web editions of the book. The book is being written; editions will publish here.
 
-<!-- PRE-LAUNCH STUB: replace with the operator's own README voice before the repo flips public. Editions land in /docs (GitHub Pages). Build pipeline lives upstream; this repo receives built pages only. -->
+<!-- placeholder copy pending the operator's own README voice. Editions land in /docs (GitHub Pages); build pipeline lives upstream; this repo receives built pages only. -->
